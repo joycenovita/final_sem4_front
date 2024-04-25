@@ -2,15 +2,7 @@
 import { ref, onMounted } from "vue";
 import axios from "../instanceAxios.js";
 
-const journals = ref([]);
 const moods = ref([]);
-const resources = ref([]);
-const challenges = ref([]);
-
-onMounted(async () => {
-  const response = await axios.get("/api/journal");
-  journals.value = response.data.data;
-})
 
 // Untuk memeriksa apakah warna adlah hex atau tidak
 const isHexColor = (color) => {
@@ -22,18 +14,6 @@ onMounted(async () => {
   const response = await axios.get("/api/mood");
   moods.value = response.data.data;
 })
-
-onMounted(async () => {
-  const response = await axios.get("/api/resource");
-  resources.value = response.data.data;
-
-})
-
-onMounted(async () => {
-  const response = await axios.get("/api/challenge");
-  challenges.value = response.data.data;
-})
-
 </script>
 
 <template>
@@ -56,7 +36,7 @@ onMounted(async () => {
               </RouterLink>
               <!-- Nav -->
               <div class="relative hidden lg:flex items-center ml-auto">
-                <nav class="text-sm leading-6 font-semibold text-white">
+                <nav class="text-sm leading-6 fonr-semibold text-white">
                   <ul class="flex space-x-8">
                     <li>
                       <RouterLink to="/profile">
@@ -99,31 +79,19 @@ onMounted(async () => {
       <div class="body">
         <div class="max-w-8xl mx-auto px-4 mt-6">
           <div class="items-center">
-            <h1 class="inline-block text-4xl font-semibold text-emerald-700 tracking-tight">Hey there! Let's start making a joURnAL</h1>
-
-            <p class="mt-10">
-                Journals:
+            <h1 class="inline-block text-4xl uppercase font-semibold text-emerald-700 tracking-tight">Make a mood</h1>
+            
+            <p class="mt-2">
+              Pouring colors onto a sheet will create a rainbow within your own diary, analyzing the emotions you have experienced.
             </p>
 
-            <div class="grid w-full sm:grid-cols-4 xs:grid-cols-4 gap-4 mt-2">
-                <!-- MAP -->
-                <div v-for="journal in journals" class="relative flex flex-col shadow-md rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 max-w-sm">
-                    <RouterLink :to="`/journal/${journal.id}`" class="text-slate-800">
-                        <div class="bg-white py-4 px-3">
-                            <h3 class="text-sm mb-2 font-semibold">{{journal.title}}</h3>
-                            <p class="text-sm text-gray-400">{{journal.content}}</p>
-                            <p class="text-xs text-emerald-700 mt-3">Date: {{ journal.date }}</p>
-                        </div>
-                    </RouterLink>
-                </div>
-                <!-- MAP -->
-            </div>
+            <RouterLink to="/mood/add">
+              <Button class="bg-emerald-700 px-3 py-2 mt-5 rounded-md hover:-translate-y-1 duration-200">
+                <p class="text-white font-semibold" >Add a Mood</p>
+              </Button>
+            </RouterLink>
 
-            <p class="mt-10">
-                Mood:
-            </p>
-
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-x-2 gap-y-8 sm:grid-cols-1 mt-2">
+            <div class="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-x-2 gap-y-8 sm:grid-cols-1 mt-10">
               <div class="grid mt-3 grid-cols-1 sm:grid-cols-11 gap-y-3 gap-x-2 sm:mt-2 2xl:mt-0">
                 <!-- MAP -->
                 <div v-for="mood in moods">
@@ -142,62 +110,9 @@ onMounted(async () => {
               </div>
             </div>
 
-            <p class="mt-10">
-                Resources:
-            </p>
-
-            <div class="grid w-full sm:grid-cols-4 xs:grid-cols-4 gap-6 mt-5">
-              <!-- MAP -->
-              <div v-for="resource in resources">
-                <div class="relative flex flex-col shadow-md rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 max-w-sm">
-                  <RouterLink :to="`/resources/${resource.id}`" class="text-slate-800">
-                    <div class="bg-amber-50 py-4 px-3">
-                      <h3 class="text-sm mb-2 font-semibold">{{resource.judul}}</h3>
-                        <p class="text-xs text-emerald-700 mt-3">Date: {{ resource.created_at.slice(0, 10) }}</p>
-                    </div>
-                  </RouterLink>
-                </div>
-                <div class="relative flex flex-col">
-                  <a :href="resource.tautan" target="_blank" class="text-xs pl-1 pt-3 text-emerald-700 underline hover:bg-inherit">{{ resource.tautan }}</a>
-                </div>
-            </div>
-              <!-- MAP -->
-            </div>
-
-            <p class="mt-10">
-                Challenge:
-            </p>
-
-            <div v-for="challenge in challenges" class="mt-2">
-              <div class="grid grid-cols-1 gap-4">
-                      <!-- MAP -->
-                      <div v-if="!challenge.tanggal_berakhir" class="relative flex flex-col shadow-md rounded-xl overflow-hidden max-w-sm">
-                          <div class="grid grid-cols-subgrid gap-4 col-span-3">
-                              <div class="px-2 py-2 h-20 text-emerald-700">
-                                  <div class="grid grid-cols-2 gap-2">
-                                      <div>
-                                          <p class="font-semibold">{{ challenge.nama_tantangan }}</p>
-                                          <p class="text-xs text-slate-800 pt-3">Start Date: {{ challenge.tanggal_mulai }}</p>
-                                          <p class="text-xs text-slate-800">Finish Date: {{ challenge.tanggal_berakhir }}</p>
-                                      </div>
-                                      <div class="pt-5 flex justify-end pr-5">
-                                          <RouterLink :to="`/challenge/${challenge.id}`" class="hover:bg-inherit">
-                                              <Button class="bg-emerald-700 px-3 py-1 rounded-sm hover:-translate-y-1 duration-100">
-                                                  <p class="text-white font-semibold">Edit</p>
-                                              </Button>
-                                          </RouterLink>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                      <!-- MAP --> 
-                </div>
-            </div>
-
-            
           </div>
         </div>
+
       </div>
     </div>
   </template>
@@ -208,9 +123,8 @@ onMounted(async () => {
       min-height: 100vh;
       width: 100%;
     }
-    .space-nav-margin {
-      margin-right: 19rem;
+    h1 {
+        font-family: 'MADE Gentle', sans-serif;                          
     }
   }
   </style>
-  

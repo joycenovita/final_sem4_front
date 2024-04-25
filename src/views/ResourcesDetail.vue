@@ -1,38 +1,63 @@
 <script setup>
 import { ref, onMounted } from "vue";
 import axios from "../instanceAxios.js";
+import { useRouter, useRoute } from "vue-router";
+import { useAuthStore } from "@/stores/auth";
+import Swal from "sweetalert2/dist/sweetalert2";
 
-const journals = ref([]);
-const moods = ref([]);
+const router = useRouter();
+const route = useRoute();
+
+const judul = ref("");
+const deskripsi = ref("");
+const tautan = ref("");
+const kategori = ref("");
 const resources = ref([]);
-const challenges = ref([]);
 
-onMounted(async () => {
-  const response = await axios.get("/api/journal");
-  journals.value = response.data.data;
-})
+const isEditing = ref(false);
+const isDisabled = ref(true);
 
-// Untuk memeriksa apakah warna adlah hex atau tidak
-const isHexColor = (color) => {
-  const hexRegex = /^#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?$/;
-  return hexRegex.test(color);
+
+const edit = () => {
+  isEditing.value = !isEditing.value;
+  console.log(isEditing)
+  isDisabled.value = !isDisabled.value;
+}
+
+const editResource = async (e) => {
+    e.preventDefault()
+    await axios.post(`/api/resource/update/${route.params.id}`,
+    {
+      judul: judul.value,
+      deskripsi: deskripsi.value,
+      tautan: tautan.value,
+      kategori: kategori.value,
+    });
+ 
+  Swal.fire("Successfully edited Resource");
+  isDisabled.value = !isDisabled.value;
+  isEditing.value = !isEditing.value;
 };
 
-onMounted(async () => {
-  const response = await axios.get("/api/mood");
-  moods.value = response.data.data;
-})
+const resourceDetail = async () => {
+    const response = await axios.get(`/api/resource/${route.params.id}`);
+    judul.value = response.data.data.judul;
+    deskripsi.value = response.data.data.deskripsi;
+    tautan.value = response.data.data.tautan;
+    kategori.value= response.data.data.kategori;
+    resources.value = response.data.data;
+}
 
-onMounted(async () => {
-  const response = await axios.get("/api/resource");
-  resources.value = response.data.data;
+onMounted(resourceDetail)
 
-})
-
-onMounted(async () => {
-  const response = await axios.get("/api/challenge");
-  challenges.value = response.data.data;
-})
+const deleteResource = async (e) => {
+  e.preventDefault()
+  if(confirm("Are you sure you want to delete this Resource?")) {
+    await axios.delete(`/api/resource/delete/${route.params.id}`);
+    Swal.fire("Successfully deleted Resource");
+    router.push("/resources");
+  }
+}
 
 </script>
 
@@ -99,105 +124,66 @@ onMounted(async () => {
       <div class="body">
         <div class="max-w-8xl mx-auto px-4 mt-6">
           <div class="items-center">
-            <h1 class="inline-block text-4xl font-semibold text-emerald-700 tracking-tight">Hey there! Let's start making a joURnAL</h1>
-
-            <p class="mt-10">
-                Journals:
-            </p>
-
-            <div class="grid w-full sm:grid-cols-4 xs:grid-cols-4 gap-4 mt-2">
-                <!-- MAP -->
-                <div v-for="journal in journals" class="relative flex flex-col shadow-md rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 max-w-sm">
-                    <RouterLink :to="`/journal/${journal.id}`" class="text-slate-800">
-                        <div class="bg-white py-4 px-3">
-                            <h3 class="text-sm mb-2 font-semibold">{{journal.title}}</h3>
-                            <p class="text-sm text-gray-400">{{journal.content}}</p>
-                            <p class="text-xs text-emerald-700 mt-3">Date: {{ journal.date }}</p>
-                        </div>
-                    </RouterLink>
-                </div>
-                <!-- MAP -->
+            <div v-if="!isEditing">
+                <h1 class="inline-block text-4xl font-semibold text-emerald-700 tracking-tight">{{ judul }}</h1>
             </div>
 
-            <p class="mt-10">
-                Mood:
-            </p>
+            <RouterLink to="/resources">
+              <Button class="bg-emerald-700 px-3 py-2 mt-5 rounded-md hover:-translate-y-1 duration-200">
+                <p class="text-white font-semibold" >Back to Resource</p>
+              </Button>
+            </RouterLink>
 
-            <div class="grid grid-cols-[repeat(auto-fit,minmax(8rem,1fr))] gap-x-2 gap-y-8 sm:grid-cols-1 mt-2">
-              <div class="grid mt-3 grid-cols-1 sm:grid-cols-11 gap-y-3 gap-x-2 sm:mt-2 2xl:mt-0">
-                <!-- MAP -->
-                <div v-for="mood in moods">
-                  <RouterLink :to="`/mood/${mood.id}`" class="hover:bg-inherit">
-                    <div class="relative flex">
-                      <div class="flex items-center gap-x-3 w-full cursor-pointer sm:block sm:space-y-1.5">
-                          <div class="h-10 w-10 rounded sm:w-full hover:-translate-y-1 duration-200" :style="{backgroundColor:  isHexColor(mood.warna) ? mood.warna : ''}"></div>
-                          <div class="px-0.5">
-                            <div class="w-6 font-medium text-xs text-slate-800 2xl:w-full">{{ mood.nama_mood }}</div>
-                          </div>
-                      </div>
+            <form class="w-full max-w-lg mt-10">
+                <div class="flex flex-wrap -mx-3 mb-6">
+                    <div class="w-full px-3">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-password">
+                            Title
+                        </label>
+                        <input :disabled="isDisabled" v-model="judul" class="appearance-none block w-full bg-gray-200-50  text-gray-700 border border-emerald-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"id="grid-first-name" type="text" placeholder="3 Things to do if you are bored">
                     </div>
-                  </RouterLink>
                 </div>
-                <!-- MAP -->
-              </div>
-            </div>
-
-            <p class="mt-10">
-                Resources:
-            </p>
-
-            <div class="grid w-full sm:grid-cols-4 xs:grid-cols-4 gap-6 mt-5">
-              <!-- MAP -->
-              <div v-for="resource in resources">
-                <div class="relative flex flex-col shadow-md rounded-xl overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-300 max-w-sm">
-                  <RouterLink :to="`/resources/${resource.id}`" class="text-slate-800">
-                    <div class="bg-amber-50 py-4 px-3">
-                      <h3 class="text-sm mb-2 font-semibold">{{resource.judul}}</h3>
-                        <p class="text-xs text-emerald-700 mt-3">Date: {{ resource.created_at.slice(0, 10) }}</p>
+                <div class="flex flex-wrap -mx-3 mb-6">
+                    <div class="w-full px-3">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-password">
+                            Category
+                        </label>
+                        <input :disabled="isDisabled" v-model="kategori" class="appearance-none block w-full bg-gray-200-50  text-gray-700 border border-emerald-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"id="grid-first-name" type="text" placeholder="Motivational">
                     </div>
-                  </RouterLink>
                 </div>
-                <div class="relative flex flex-col">
-                  <a :href="resource.tautan" target="_blank" class="text-xs pl-1 pt-3 text-emerald-700 underline hover:bg-inherit">{{ resource.tautan }}</a>
+                <div class="flex flex-wrap -mx-3 mb-6">
+                    <div class="w-full px-3">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-password">
+                            CONTENT
+                        </label>
+                        <textarea :disabled="isDisabled" v-model="deskripsi" class="resize rounded-sm appearance-none block w-full bg-gray-200-50 text-gray-700 border border-emerald-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500" ></textarea>
+                        <p class="text-xs text-gray-200-50">Drag the corner of the content box to resize it.</p>
+                    </div>
                 </div>
-            </div>
-              <!-- MAP -->
-            </div>
-
-            <p class="mt-10">
-                Challenge:
-            </p>
-
-            <div v-for="challenge in challenges" class="mt-2">
-              <div class="grid grid-cols-1 gap-4">
-                      <!-- MAP -->
-                      <div v-if="!challenge.tanggal_berakhir" class="relative flex flex-col shadow-md rounded-xl overflow-hidden max-w-sm">
-                          <div class="grid grid-cols-subgrid gap-4 col-span-3">
-                              <div class="px-2 py-2 h-20 text-emerald-700">
-                                  <div class="grid grid-cols-2 gap-2">
-                                      <div>
-                                          <p class="font-semibold">{{ challenge.nama_tantangan }}</p>
-                                          <p class="text-xs text-slate-800 pt-3">Start Date: {{ challenge.tanggal_mulai }}</p>
-                                          <p class="text-xs text-slate-800">Finish Date: {{ challenge.tanggal_berakhir }}</p>
-                                      </div>
-                                      <div class="pt-5 flex justify-end pr-5">
-                                          <RouterLink :to="`/challenge/${challenge.id}`" class="hover:bg-inherit">
-                                              <Button class="bg-emerald-700 px-3 py-1 rounded-sm hover:-translate-y-1 duration-100">
-                                                  <p class="text-white font-semibold">Edit</p>
-                                              </Button>
-                                          </RouterLink>
-                                      </div>
-                                  </div>
-                              </div>
-                          </div>
-                      </div>
-                      <!-- MAP --> 
+                <div class="flex flex-wrap -mx-3 mb-6">
+                    <div class="w-full px-3">
+                        <label class="block uppercase tracking-wide text-gray-700 text-xs font-bold mb-2" for="grid-password">
+                            Link
+                        </label>
+                        <input :disabled="isDisabled" v-model="tautan" class="appearance-none block w-full bg-gray-200-50  text-gray-700 border border-emerald-700 rounded py-3 px-4 mb-3 leading-tight focus:outline-none focus:bg-white focus:border-gray-500"id="grid-first-name" type="text" placeholder="https://www.pinterest.com/">
+                        <p class="text-xs text-gray-200-50">Attach the link here.</p>
+                    </div>
                 </div>
-            </div>
-
-            
+                <div class="md:w-2/3">
+                    <button v-if="!isEditing" @click="edit" class="shadow bg-emerald-700 hover:bg-emerald-600 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded">
+                        Edit
+                    </button>
+                    <button v-else @click="editResource" class="shadow bg-emerald-700 hover:bg-emerald-600 focus:shadow-outline focus:outline-none text-white font-bold py-2 px-4 rounded">
+                        Save
+                    </button>
+                    <button @click="deleteResource" class="shadow bg-white border border-emerald-700 hover:bg-slate-50; focus:shadow-outline focus:outline-none text-amber-500 font-bold py-2 px-4 ml-3 rounded">
+                      Delete
+                    </button>
+                </div>
+            </form>
           </div>
         </div>
+
       </div>
     </div>
   </template>
@@ -213,4 +199,3 @@ onMounted(async () => {
     }
   }
   </style>
-  
