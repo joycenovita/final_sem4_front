@@ -20,16 +20,19 @@ const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
+      path: '/',
+      name: 'Sign In',
+      component: SignIn,
+    },
+    {
       path: '/sign-in',
       name: 'Sign In',
       component: SignIn,
-      meta: { requiresAuth: true }
     },
     {
       path: '/sign-up',
       name: 'Sign Up',
       component: SignUp,
-      meta: { requiresAuth: true }
     },
     {
       path: '/home',
@@ -119,7 +122,7 @@ const router = createRouter({
 })
 router.beforeEach((to, from, next) => {
   if (to.matched.some((record) => record.meta.requiresAuth)) {
-    const token = localStorage.getItem
+    const token = localStorage.getItem('token')
     if (!token) {
       next('/sign-in')
     } else {
